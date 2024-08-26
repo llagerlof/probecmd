@@ -2,7 +2,9 @@
 
 Extract useful information from an EndeavourOS command or package.
 
-"I" wrote this program using an LLM called Claude 3.5 Sonnet.
+"I" wrote this program using an LLM called Claude 3.5 Sonnet. I didn't even have to read the code.
+
+I had to make a dozen interactions with Claude to fix some problems, but this experiment is working.
 
 ```
 [user@pc ~/repos/probecmd]$ ./probecmd bottom
