@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "probecmd 1.4"
+echo "probecmd 1.6"
 
 # Check if an argument is provided
 if [ $# -eq 0 ]; then
@@ -48,7 +48,7 @@ else
 fi
 
 # Check if it's an alias or function
-type_output=$(type "$input" 2>/dev/null | head -n1)
+type_output=$(bash -ic "type $input 2>/dev/null" | head -n1)
 if [[ $type_output == *"is aliased to"* ]]; then
     echo "* Alias: Yes"
     echo "* Function: No"
