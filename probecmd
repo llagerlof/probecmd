@@ -1,0 +1,113 @@
+#!/bin/bash
+echo "probecmd 1.4"
+
+# Check if an argument is provided
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 <command or package name>"
+    exit 1
+fi
+
+input="$1"
+
+# Function to get the package name
+get_package_name() {
+    pacman -Qqo "$(which "$1" 2>/dev/null)" 2>/dev/null || pacman -Qs "^$1$" | grep -m1 "^local/" | cut -d' ' -f1 | cut -d'/' -f2
+}
+
+# Function to get the executable location
+get_executable_location() {
+    which "$1" 2>/dev/null || {
+        pkg=$(get_package_name "$1")
+        if [ -n "$pkg" ]; then
+            pacman -Ql "$pkg" | grep -E "/bin/[^/]+$" | awk '{print $2}' | head -n1
+        fi
+    }
+}
+
+# Get package name and executable location
+package=$(get_package_name "$input")
+location=$(get_executable_location "$input")
+
+# If location is still empty, try to find it using the package name
+if [ -z "$location" ] && [ -n "$package" ]; then
+    location=$(pacman -Ql "$package" | grep -E "/bin/[^/]+$" | awk '{print $2}' | head -n1)
+fi
+
+# Package name
+if [ -n "$package" ]; then
+    echo "* Package name: $package"
+else
+    echo "* Package name: Not found"
+fi
+
+# Executable location
+if [ -n "$location" ]; then
+    echo "* Executable location: $location"
+else
+    echo "* Executable location: Not found"
+fi
+
+# Check if it's an alias or function
+type_output=$(type "$input" 2>/dev/null | head -n1)
+if [[ $type_output == *"is aliased to"* ]]; then
+    echo "* Alias: Yes"
+    echo "* Function: No"
+elif [[ $type_output == *"is a function"* ]]; then
+    echo "* Alias: No"
+    echo "* Function: Yes"
+else
+    echo "* Alias: No"
+    echo "* Function: No"
+fi
+
+# Check if it's a shell built-in
+if [[ $type_output == *"is a shell builtin"* ]]; then
+    echo "* Shell built-in command: Yes"
+else
+    echo "* Shell built-in command: No"
+fi
+
+# Check if it's binary or interpreted
+if [ -n "$location" ] && [ -f "$location" ]; then
+    if file "$location" | grep -q "ELF"; then
+        echo "* Binary: Yes"
+        echo "* Interpreted: No"
+    else
+        echo "* Binary: No"
+        echo "* Interpreted: Yes"
+    fi
+else
+    echo "* Binary: No"
+    echo "* Interpreted: No"
+fi
+
+# Check installation source
+if [ -n "$package" ]; then
+    if pacman -Qm "$package" &>/dev/null; then
+        echo "* AUR: Yes"
+        echo "* Pacman: No"
+    elif pacman -Q "$package" &>/dev/null; then
+        echo "* AUR: No"
+        echo "* Pacman: Yes"
+    else
+        echo "* AUR: No"
+        echo "* Pacman: No"
+    fi
+else
+    echo "* AUR: No"
+    echo "* Pacman: No"
+fi
+
+# Check if installed via pip
+if pip list 2>/dev/null | grep -q "^$input "; then
+    echo "* Pip: Yes"
+else
+    echo "* Pip: No"
+fi
+
+# Check if installed via npm
+if npm list -g "$input" &>/dev/null; then
+    echo "* Npm: Yes"
+else
+    echo "* Npm: No"
+fi
