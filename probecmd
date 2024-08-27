@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "probecmd 1.7"
+echo "probecmd 3.0"
 
 # Check if an argument is provided
 if [ $# -eq 0 ]; then
@@ -31,6 +31,11 @@ location=$(get_executable_location "$input")
 # If location is still empty, try to find it using the package name
 if [ -z "$location" ] && [ -n "$package" ]; then
     location=$(pacman -Ql "$package" | grep -E "/bin/[^/]+$" | awk '{print $2}' | head -n1)
+fi
+
+# If location is still empty, try to find it in the current environment
+if [ -z "$location" ]; then
+    location=$(which "$input")
 fi
 
 # Package name
@@ -99,8 +104,25 @@ else
 fi
 
 # Check if installed via pip
-if pip list 2>/dev/null | grep -q "^$input "; then
-    echo "* Pip: Yes"
+pip_package=""
+if [ -n "$location" ]; then
+    interpreter=$(head -n1 "$location" | sed 's/^#!//')
+    pip_output=$("$interpreter" -m pip list 2>/dev/null)
+    if [ -n "$pip_output" ]; then
+        while read -r package version; do
+            if [[ "$package" != "Package" ]]; then  # Skip header
+                files_output=$("$interpreter" -m pip show -f "$package" 2>/dev/null)
+                if echo "$files_output" | grep -q "/$input$"; then
+                    pip_package="$package"
+                    break
+                fi
+            fi
+        done <<< "$pip_output"
+    fi
+fi
+
+if [ -n "$pip_package" ]; then
+    echo "* Pip: Yes (Package: $pip_package)"
 else
     echo "* Pip: No"
 fi
