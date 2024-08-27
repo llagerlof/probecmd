@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "probecmd 1.6"
+echo "probecmd 1.7"
 
 # Check if an argument is provided
 if [ $# -eq 0 ]; then
@@ -106,8 +106,18 @@ else
 fi
 
 # Check if installed via npm
-if npm list -g "$input" &>/dev/null; then
-    echo "* Npm: Yes"
+npm_package=""
+if command -v "$input" >/dev/null 2>&1; then
+    npm_package=$(npm list -g --depth=0 2>/dev/null | grep -oP "(?<=── ).+(?=@)" | while read pkg; do
+        if npm ls -g "$pkg" 2>/dev/null | grep -q "$input"; then
+            echo "$pkg"
+            break
+        fi
+    done)
+fi
+
+if [ -n "$npm_package" ]; then
+    echo "* Npm: Yes (Package: $npm_package)"
 else
     echo "* Npm: No"
 fi
