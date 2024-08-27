@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "probecmd 3.0"
+echo "probecmd 3.1"
 
 # Check if an argument is provided
 if [ $# -eq 0 ]; then
@@ -35,7 +35,7 @@ fi
 
 # If location is still empty, try to find it in the current environment
 if [ -z "$location" ]; then
-    location=$(which "$input")
+    location=$(which "$input" 2>/dev/null)
 fi
 
 # Package name
