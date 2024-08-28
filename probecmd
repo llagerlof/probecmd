@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "probecmd 3.1"
+echo "probecmd 3.6"
 
 # Check if an argument is provided
 if [ $# -eq 0 ]; then
@@ -105,19 +105,25 @@ fi
 
 # Check if installed via pip
 pip_package=""
-if [ -n "$location" ]; then
-    interpreter=$(head -n1 "$location" | sed 's/^#!//')
-    pip_output=$("$interpreter" -m pip list 2>/dev/null)
-    if [ -n "$pip_output" ]; then
-        while read -r package version; do
-            if [[ "$package" != "Package" ]]; then  # Skip header
-                files_output=$("$interpreter" -m pip show -f "$package" 2>/dev/null)
-                if echo "$files_output" | grep -q "/$input$"; then
-                    pip_package="$package"
-                    break
+if [ -n "$location" ] && [ -f "$location" ]; then
+    # Read the first line of the file, removing null bytes
+    first_line=$(head -n1 "$location" | tr -d '\000')
+    # Extract the interpreter from the shebang line
+    interpreter=$(echo "$first_line" | sed -n 's/^#!\([^ ]*\).*/\1/p')
+
+    if [ -n "$interpreter" ] && [ -x "$interpreter" ]; then
+        pip_output=$("$interpreter" -m pip list 2>/dev/null)
+        if [ -n "$pip_output" ]; then
+            while read -r package version; do
+                if [[ "$package" != "Package" ]]; then  # Skip header
+                    files_output=$("$interpreter" -m pip show -f "$package" 2>/dev/null)
+                    if echo "$files_output" | grep -q "/$input$"; then
+                        pip_package="$package"
+                        break
+                    fi
                 fi
-            fi
-        done <<< "$pip_output"
+            done <<< "$pip_output"
+        fi
     fi
 fi
 

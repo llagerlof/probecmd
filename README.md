@@ -4,7 +4,11 @@ Extract useful information from an EndeavourOS command or package.
 
 "I" wrote this program using an LLM called Claude 3.5 Sonnet. I didn't even have to read the code.
 
-I had to make a dozen interactions with Claude to fix some problems, but this experiment is working.
+I had to make a dozen interactions with Claude to fix some problems, but this experiment is working. Sort of.
+
+### Examples
+
+**Identify by package name**
 
 ```
 [user@pc ~/repos/probecmd]$ ./probecmd bottom
@@ -20,8 +24,11 @@ probecmd 1.6
 * Pacman: Yes
 * Pip: No
 * Npm: No
+```
 
+**Identify by executable filename**
 
+```
 [user@pc ~/repos/probecmd]$ ./probecmd btm
 probecmd 1.6
 * Package name: bottom
